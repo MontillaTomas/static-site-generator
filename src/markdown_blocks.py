@@ -43,6 +43,8 @@ def text_to_children(text: str) -> list[HTMLNode]:
 def paragraph_to_html_node(paragraph: str) -> HTMLNode:
     normalized_text = re.sub(r"\s+", " ", paragraph).strip()
     children = text_to_children(normalized_text)
+    if not children:
+        return LeafNode(tag="p", value="")
     return ParentNode(tag="p", children=children)
 
 
@@ -50,6 +52,8 @@ def heading_to_html_node(heading: str) -> HTMLNode:
     level = heading.count("#")
     heading_content = heading[level:].strip()
     children = text_to_children(heading_content)
+    if not children:
+        return LeafNode(tag=f"h{level}", value="")
     return ParentNode(tag=f"h{level}", children=children)
 
 
@@ -74,16 +78,25 @@ def quote_to_html_node(quote: str) -> HTMLNode:
         new_lines.append(line.lstrip(">").strip())
     content = " ".join(new_lines)
     children = text_to_children(content)
+    if not children:
+        return LeafNode(tag="blockquote", value="")
     return ParentNode(tag="blockquote", children=children)
 
 
 def unordered_list_to_html_node(block: str) -> HTMLNode:
     items = block.split("\n")
     items = [item.strip() for item in items]
-    items = [re.sub(r"^-\s+", "", item) for item in items]
+    items = [re.sub(r"^-\s", "", item) for item in items]
     list_items = [
         ParentNode(tag="li", children=text_to_children(item)) for item in items
     ]
+    list_items = []
+    for item in items:
+        children = text_to_children(item)
+        if not children:
+            list_items.append(LeafNode(tag="li", value=""))
+        else:
+            list_items.append(ParentNode(tag="li", children=children))
     return ParentNode(tag="ul", children=list_items)
 
 

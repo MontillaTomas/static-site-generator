@@ -23,8 +23,8 @@ def generate_page(from_path, template_path, dest_path):
         template = f.read()
     content = markdown_to_html_node(markdown).to_html()
     title = extract_title(markdown)
-    template = template.replace("{{ title }}", title)
-    template = template.replace("{{ content }}", content)
+    template = template.replace("{{ Title }}", title)
+    template = template.replace("{{ Content }}", content)
 
     if not os.path.exists(dest_path):
         os.makedirs(dest_path, exist_ok=True)

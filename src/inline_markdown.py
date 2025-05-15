@@ -63,10 +63,9 @@ def split_nodes_link(old_nodes: list[TextNode]) -> list[TextNode]:
             new_nodes.append(node)
             continue
         parts = re.split(r"(?<!!)\[.*?\]\(.*?\)", node.text)
-        for i, part in enumerate(parts):
-            if part == "":
-                continue
-            new_nodes.append(TextNode(part, TextType.TEXT))
+        for i in range(len(parts)):
+            if parts[i]:
+                new_nodes.append(TextNode(parts[i], TextType.TEXT))
             if i < len(links):
                 new_nodes.append(TextNode(links[i][0], TextType.LINK, links[i][1]))
     return new_nodes
