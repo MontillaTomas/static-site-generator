@@ -40,52 +40,76 @@ def text_to_children(text: str) -> list[HTMLNode]:
     return [text_node_to_html_node(text_node) for text_node in text_nodes]
 
 
+def paragraph_to_html_node(paragraph: str) -> HTMLNode:
+    normalized_text = re.sub(r"\s+", " ", paragraph).strip()
+    children = text_to_children(normalized_text)
+    return ParentNode(tag="p", children=children)
+
+
+def heading_to_html_node(heading: str) -> HTMLNode:
+    level = heading.count("#")
+    heading_content = heading[level:].strip()
+    children = text_to_children(heading_content)
+    return ParentNode(tag=f"h{level}", children=children)
+
+
+def code_to_html_node(code: str) -> HTMLNode:
+    code_content = re.findall(r"```([\s\S]*?)```", code)
+    if code_content:
+        code = code_content[0]
+        lines = [line.strip() for line in code.split("\n")]
+        processed_code = "\n".join(lines[1:])
+        code_node = LeafNode(tag="code", value=processed_code)
+        return ParentNode(tag="pre", children=[code_node])
+    return ParentNode(tag="pre", children=[LeafNode(tag="code", value="")])
+
+
+def quote_to_html_node(quote: str) -> HTMLNode:
+    lines = quote.split("\n")
+    lines = [line.strip() for line in lines]
+    new_lines = []
+    for line in lines:
+        if not line.startswith(">"):
+            raise ValueError("invalid quote block")
+        new_lines.append(line.lstrip(">").strip())
+    content = " ".join(new_lines)
+    children = text_to_children(content)
+    return ParentNode(tag="blockquote", children=children)
+
+
+def unordered_list_to_html_node(block: str) -> HTMLNode:
+    items = block.split("\n")
+    items = [item.strip() for item in items]
+    items = [re.sub(r"^-\s+", "", item) for item in items]
+    list_items = [
+        ParentNode(tag="li", children=text_to_children(item)) for item in items
+    ]
+    return ParentNode(tag="ul", children=list_items)
+
+
+def ordered_list_to_html_node(block: str) -> HTMLNode:
+    items = block.split("\n")
+    items = [item.strip() for item in items]
+    items = [re.sub(r"^\d+\.\s+", "", item) for item in items]
+    list_items = [
+        ParentNode(tag="li", children=text_to_children(item)) for item in items
+    ]
+    return ParentNode(tag="ol", children=list_items)
+
+
 def create_html_node(block: str, block_type: BlockType) -> HTMLNode:
     if block_type == BlockType.PARAGRAPH:
-        normalized_text = re.sub(r"\s+", " ", block).strip()
-        children = text_to_children(normalized_text)
-        return ParentNode(tag="p", children=children)
+        return paragraph_to_html_node(block)
     elif block_type == BlockType.HEADING:
-        level = block.count("#")
-        heading_content = block[level:].strip()
-        children = text_to_children(heading_content)
-        return ParentNode(tag=f"h{level}", children=children)
+        return heading_to_html_node(block)
     elif block_type == BlockType.CODE:
-        code_content = re.findall(r"```([\s\S]*?)```", block)
-        if code_content:
-            code = code_content[0]
-            lines = [line.strip() for line in code.split("\n")]
-            processed_code = "\n".join(lines[1:])
-            code_node = LeafNode(tag="code", value=processed_code)
-            return ParentNode(tag="pre", children=[code_node])
-        return ParentNode(tag="pre", children=[LeafNode(tag="code", value="")])
+        return code_to_html_node(block)
     elif block_type == BlockType.QUOTE:
-        lines = block.split("\n")
-        lines = [line.strip() for line in lines]
-        new_lines = []
-        for line in lines:
-            if not line.startswith(">"):
-                raise ValueError("invalid quote block")
-            new_lines.append(line.lstrip(">").strip())
-        content = "\n".join(new_lines)
-        children = text_to_children(content)
-        return ParentNode(tag="blockquote", children=children)
+        return quote_to_html_node(block)
     elif block_type == BlockType.UNORDERED_LIST:
-        items = block.split("\n")
-        items = [item.strip() for item in items]
-        items = [re.sub(r"^-\s+", "", item) for item in items]
-        list_items = [
-            ParentNode(tag="li", children=text_to_children(item)) for item in items
-        ]
-        return ParentNode(tag="ul", children=list_items)
+        return unordered_list_to_html_node(block)
     elif block_type == BlockType.ORDERED_LIST:
-        items = block.split("\n")
-        items = [item.strip() for item in items]
-        items = [re.sub(r"^\d+\.\s+", "", item) for item in items]
-        list_items = [
-            ParentNode(tag="li", children=text_to_children(item)) for item in items
-        ]
-        return ParentNode(tag="ol", children=list_items)
+        return ordered_list_to_html_node(block)
     else:
         raise ValueError(f"Unknown block type: {block_type}")
 
