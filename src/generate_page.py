@@ -1,5 +1,6 @@
 import os
 
+from copystatic import validate_directory_path
 from markdown_blocks import markdown_to_html_node
 
 
@@ -30,3 +31,17 @@ def generate_page(from_path, template_path, dest_path):
         os.makedirs(dest_path, exist_ok=True)
     with open(os.path.join(dest_path, "index.html"), "w") as f:
         f.write(template)
+
+
+def generate_pages_recursively(dir_path_content, template_path, dest_dir_path):
+    validate_directory_path(dir_path_content)
+
+    dir_list = os.listdir(dir_path_content)
+    for item in dir_list:
+        source_item = os.path.join(dir_path_content, item)
+        destination_item = os.path.join(dest_dir_path, item)
+        if os.path.isfile(source_item):
+            if source_item.endswith(".md"):
+                generate_page(source_item, template_path, dest_dir_path)
+        elif os.path.isdir(source_item):
+            generate_pages_recursively(source_item, template_path, destination_item)
