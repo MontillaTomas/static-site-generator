@@ -109,6 +109,14 @@ class TestSplitNodesDelimiter(unittest.TestCase):
             new_nodes,
         )
 
+    def test_single_image(self):
+        node = TextNode("![image](https://i.imgur.com/zjjcJKZ.png)", TextType.TEXT)
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png")],
+            new_nodes,
+        )
+
     def test_split_images_with_no_images(self):
         node = TextNode("This is text with no images", TextType.TEXT)
         new_nodes = split_nodes_image([node])
