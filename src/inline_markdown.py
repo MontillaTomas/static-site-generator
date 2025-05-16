@@ -38,17 +38,19 @@ def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
         if node.text_type != TextType.TEXT:
             new_nodes.append(node)
             continue
+
         images = extract_markdown_images(node.text)
-        if len(images) == 0:
+        if not images:
             new_nodes.append(node)
             continue
+
         parts = re.split(r"!\[.*?\]\(.*?\)", node.text)
-        for i, part in enumerate(parts):
-            if part == "":
-                continue
-            new_nodes.append(TextNode(part, TextType.TEXT))
+        for i in range(len(parts)):
+            if parts[i]:
+                new_nodes.append(TextNode(parts[i], TextType.TEXT))
             if i < len(images):
-                new_nodes.append(TextNode(images[i][0], TextType.IMAGE, images[i][1]))
+                alt_text, url = images[i]
+                new_nodes.append(TextNode(alt_text, TextType.IMAGE, url))
     return new_nodes
 
 
